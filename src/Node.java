@@ -1,5 +1,5 @@
 public class Node {
-    private double x,y,z;
+    public double x,y,z;
 
     private double size,sizeModifier;
 
