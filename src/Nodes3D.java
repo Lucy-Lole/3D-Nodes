@@ -6,31 +6,18 @@ import java.util.logging.Handler;
 
 public class Nodes3D {
 
-    Handler handler
-
     public static void main(String[] args) {
         ScreenController controller = new ScreenController();
 
         ScreenController.launch(ScreenController.class, args);
 
-        Node[] nodes = {};
+        NodeList currentNodes = new NodeList();
 
         boolean running = true;
 
         while (running) {
-            controller.updateFrame(nodes);
-
-
+            controller.updateFrame(currentNodes);
+            //need to check for other things eg inputs here so as not to get stuck with the.
         }
-
-
     }
-
-    public static void createNode(int x,int y,Node[] nodes) {
-
-
-
-    }
-
-
 }

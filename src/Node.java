@@ -1,27 +1,25 @@
 public class Node {
-    public double x,y,z;
+
+    public double[] position;
+    // [x,y,z]
 
     private double size,sizeModifier;
 
-    private double xSpeed,ySpeed,zSpeed;
+    private double[] speed;
+    // [xSpeed,ySpeed,zSpeed]
 
-    Node(double x, double y, double z, double size, double sizeModifier, double xSpeed,
-         double ySpeed, double zSpeed) {
+    Node(double[] position, double size, double sizeModifier, double[] speed) {
 
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.position = position;
         this.size = size;
         this.sizeModifier = sizeModifier;
-        this.xSpeed = xSpeed;
-        this.ySpeed = ySpeed;
-        this.zSpeed = zSpeed;
+        this.speed = speed;
     }
 
     public void updatePosition() {
-        x += xSpeed;
-        y += ySpeed;
-        z += zSpeed;
+        for (int i=0;i<=2;i++) {
+            position[i] += speed[i];
+        }
 
     }
 
