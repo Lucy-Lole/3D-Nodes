@@ -3,9 +3,9 @@ public class Node {
     public double[] position;
     // [x,y,z]
 
-    private double size,sizeModifier;
+    public double size,sizeModifier;
 
-    private double[] speed;
+    public double[] speed;
     // [xSpeed,ySpeed,zSpeed]
 
     Node(double[] position, double size, double sizeModifier, double[] speed) {
