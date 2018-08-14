@@ -14,3 +14,12 @@ everything :)
 -frame rate display
 
 
+
+
+Code graveyard:
+
+        /*
+        canvas.addEventFilter(MouseEvent.MOUSE_PRESSED, (event) ->
+                    mouseClicks.add(new double[] {event.getX(), event.getY()})
+        );
+        */
