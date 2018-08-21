@@ -8,6 +8,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
+import java.util.Random;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -18,12 +19,14 @@ import javafx.animation.*;
 public class Application {
 
 
-    final static double WIN_HEIGHT = 400;
-    final static double WIN_WIDTH = 600;
+    final static double WIN_HEIGHT = 800;
+    final static double WIN_WIDTH = 1200;
 
-    final static double[] defaultSpeed = {5,0,5};
+    final static double[] defaultSpeed = {3,3,5};
     final static double defaultSize = 10;
     final static double defaultSizeM = 1;
+
+    static double[] boundaries;
 
     static HashSet<double[]> mouseClicks = new HashSet<>();
     static ArrayList<Node> Nodes = new ArrayList<>();
@@ -46,18 +49,29 @@ public class Application {
         Scene mainScene = new Scene(root);
         Canvas canvas = new Canvas();
 
-        mainStage.setResizable(false);
+        mainStage.setResizable(true);
         mainStage.setHeight(WIN_HEIGHT);
         mainStage.setWidth(WIN_WIDTH);
         mainStage.setTitle("3D Nodes");
         mainStage.setScene(mainScene);
+        canvas.setWidth(mainStage.getWidth());
+        canvas.setHeight(mainStage.getHeight());
+        GraphicsContext GC = canvas.getGraphicsContext2D();
+
+
+
+        //There seems to be some weirdness where the canvas and stage can't agree on the same
+        //size, so i've manually found the size difference and fixed it
+        double [] boundaries = {canvas.getWidth()-17,canvas.getHeight()-40,400};
+
         mainStage.show();
+
 
         mainStage.setOnCloseRequest(event -> Application.close());
 
-        canvas.setWidth(WIN_WIDTH);
-        canvas.setHeight(WIN_HEIGHT);
-        GraphicsContext GC = canvas.getGraphicsContext2D();
+
+
+
 
         canvas.setOnMouseClicked(event ->
                 mouseClicks.add(new double[] {event.getX(), event.getY(), 0}));
@@ -73,27 +87,36 @@ public class Application {
                 GC.setFill(Color.WHITE);
 
 
+                //UPDATING NODES POSITIONS
                 if ( Nodes!=null && !Nodes.isEmpty()){
-                    System.out.println("Updating Positions");
                     for (Node n : Nodes) {
-                        n.updatePosition();
+                        n.updatePosition(boundaries);
                     }
                 }
 
+
+                //CREATING NEW NODES IF MOUSE IS CLICKED
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
+                    Random randomGen = new Random();
                     for (double[] pos : mouseClicks) {
-                        Nodes.add(new Node(pos, defaultSize, defaultSizeM, defaultSpeed));
+                        Nodes.add(new Node(pos, defaultSize, defaultSizeM,
+                                new double[] {
+                                        randomGen.nextDouble()*6-3,
+                                        randomGen.nextDouble()*6-3,
+                                        randomGen.nextDouble()*6-3}));
                     }
                     mouseClicks.clear();
                 }
 
 
+                //DRAWING ALL THE NODES
                 if (Nodes!=null && !Nodes.isEmpty()) {
                     GC.setFill(Color.BLACK);
                     GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
                     GC.setFill(Color.WHITE);
                     for (Node n : Nodes) {
-                        GC.fillOval(n.position[0], n.position[1], n.size, n.size);
+
+                        GC.fillOval(n.position[0], n.position[1], n.size*n.sizeModifier, n.size*n.sizeModifier);
                     }
                 }
 
@@ -111,9 +134,6 @@ public class Application {
     private static void close() {
         System.out.println("Application closing");
 
-        /*for (double[] d : mouseClicks) {
-            System.out.println(d[0] +" "+ d[1]);
-        }*/
 
         System.exit(0);
     }
