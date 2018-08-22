@@ -1,20 +1,11 @@
-import javafx.scene.canvas.*;
-
 public class ScreenController {
 
-    private long lastTime = 0;
-    final long frameSpace = 1000000000/60;
-    private boolean canUpdate;
-
-
-    public boolean canUpdate(long now) {
-        if (now >= lastTime + frameSpace) {
-            canUpdate = true;
-
-        }
-        else { canUpdate = false;}
+    public boolean CanUpdate(long now) {
+        final long frameSpace = 1000000000/60;
+        long lastTime;
+        boolean canUpdate;
         lastTime = now;
-        return canUpdate;
+        return (now >= lastTime + frameSpace);
     }
 
 

@@ -1,3 +1,6 @@
+
+import javafx.scene.paint.Color;
+
 import java.util.Arrays;
 
 public class Node {
@@ -7,23 +10,27 @@ public class Node {
 
     public double size,sizeModifier;
 
-    public double diam = 2*size*sizeModifier;
+    private double diam = 2*size*sizeModifier;
 
-    public double[] centre = {0,0,0};
+    private double[] centre = {0,0,0};
 
-    public double[] speed;
+    private double[] speed;
+
+    public Color nodeColor;
+
 
     // [xSpeed,ySpeed,zSpeed]
 
-    Node(double[] position, double size, double sizeModifier, double[] speed) {
+    Node(double[] position, double size, double sizeModifier, double[] speed, Color nodeColor) {
 
+        this.nodeColor = nodeColor;
         this.position = position;
         this.size = size;
         this.sizeModifier = sizeModifier;
         this.speed = Arrays.copyOf(speed,3);
     }
 
-    public void updatePosition(double[] boundaries) {
+    public void UpdatePosition(double[] boundaries) {
         for (int i=0;i<=2;i++) {
             //update the position first
             position[i] += speed[i];
