@@ -14,7 +14,7 @@ import javafx.animation.*;
 
 public class Application {
 
-
+//
     private final static double WIN_HEIGHT = 800;
     private final static double WIN_WIDTH = 1200;
 
