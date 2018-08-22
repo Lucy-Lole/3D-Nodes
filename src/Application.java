@@ -1,16 +1,12 @@
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
-import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.*;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
 import java.util.Random;
-
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import javafx.animation.*;
@@ -19,22 +15,21 @@ import javafx.animation.*;
 public class Application {
 
 
-    final static double WIN_HEIGHT = 800;
-    final static double WIN_WIDTH = 1200;
+    private final static double WIN_HEIGHT = 800;
+    private final static double WIN_WIDTH = 1200;
 
-    final static double[] defaultSpeed = {3,3,5};
-    final static double defaultSize = 10;
-    final static double defaultSizeM = 1;
+    private final static double[] defaultPos = {400,600,200};
+    private final static double defaultSize = 10;
+    private final static double defaultSizeM = 1;
 
-    static double[] boundaries;
+    private static HashSet<double[]> mouseClicks = new HashSet<>();
+    private static ArrayList<Node> Nodes = new ArrayList<>();
 
-    static HashSet<double[]> mouseClicks = new HashSet<>();
-    static ArrayList<Node> Nodes = new ArrayList<>();
-
+    private static Random randomGen = new Random();
 
     public static void main(String args[]) {
         JFXPanel panel = new JFXPanel();
-        Platform.runLater(()-> start());
+        Platform.runLater(Application::start);
     }
 
 
@@ -42,7 +37,7 @@ public class Application {
         System.out.println("Application starting...");
         System.out.println("Initializing Screen Controller");
 
-        ScreenController controller = new ScreenController();
+        //ScreenController controller = new ScreenController();
 
         Group root = new Group();
         Stage mainStage =  new Stage();
@@ -59,19 +54,13 @@ public class Application {
         GraphicsContext GC = canvas.getGraphicsContext2D();
 
 
-
         //There seems to be some weirdness where the canvas and stage can't agree on the same
         //size, so i've manually found the size difference and fixed it
         double [] boundaries = {canvas.getWidth()-17,canvas.getHeight()-40,400};
 
         mainStage.show();
 
-
         mainStage.setOnCloseRequest(event -> Application.close());
-
-
-
-
 
         canvas.setOnMouseClicked(event ->
                 mouseClicks.add(new double[] {event.getX(), event.getY(), 0}));
@@ -80,61 +69,64 @@ public class Application {
         GC.setFill(Color.BLACK);
         GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
 
+        //These root and end nodes will be used for our dijkstra algorithm
+        Node rootNode = new Node(defaultPos,defaultSize,defaultSizeM,RandomSpeed(),Color.GREEN);
+        Node endNode = new Node(new double[] {200,600,400},defaultSize,defaultSizeM,RandomSpeed(),Color.RED);
+        Nodes.add(rootNode);
+        Nodes.add(endNode);
+
+
         new AnimationTimer() {
             @Override
             public void handle(long now) {
                 GC.setStroke(Color.WHITE);
                 GC.setFill(Color.WHITE);
 
-
                 //UPDATING NODES POSITIONS
                 if ( Nodes!=null && !Nodes.isEmpty()){
                     for (Node n : Nodes) {
-                        n.updatePosition(boundaries);
+                        n.UpdatePosition(boundaries);
                     }
                 }
 
-
                 //CREATING NEW NODES IF MOUSE IS CLICKED
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
-                    Random randomGen = new Random();
+
                     for (double[] pos : mouseClicks) {
                         Nodes.add(new Node(pos, defaultSize, defaultSizeM,
                                 new double[] {
                                         randomGen.nextDouble()*6-3,
                                         randomGen.nextDouble()*6-3,
-                                        randomGen.nextDouble()*6-3}));
+                                        randomGen.nextDouble()*6-3}, Color.WHITE));
                     }
                     mouseClicks.clear();
                 }
-
 
                 //DRAWING ALL THE NODES
                 if (Nodes!=null && !Nodes.isEmpty()) {
                     GC.setFill(Color.BLACK);
                     GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
-                    GC.setFill(Color.WHITE);
                     for (Node n : Nodes) {
 
+                        GC.setFill(n.nodeColor);
                         GC.fillOval(n.position[0], n.position[1], n.size*n.sizeModifier, n.size*n.sizeModifier);
                     }
                 }
-
-
-
-
             }
-
         }.start();
-
-
     }
 
+    private static double[] RandomSpeed() {
+
+        return new double [] {
+                randomGen.nextDouble()*6-3,
+                randomGen.nextDouble()*6-3,
+                randomGen.nextDouble()*6-3
+        };
+    }
 
     private static void close() {
         System.out.println("Application closing");
-
-
         System.exit(0);
     }
 }
