@@ -1,6 +1,4 @@
-
 import javafx.scene.paint.Color;
-
 import java.util.Arrays;
 
 public class Node {
@@ -12,7 +10,7 @@ public class Node {
 
     private double diam = 2*size*sizeModifier;
 
-    private double[] centre = {0,0,0};
+    public double[] centre = {0,0,0};
 
     private double[] speed;
 

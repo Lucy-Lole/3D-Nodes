@@ -6,11 +6,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
-
 import java.util.*;
-
 import javafx.animation.*;
-
 
 public class Application {
 
@@ -20,7 +17,7 @@ public class Application {
 
     private final static double[] defaultPos = {400,600,200};
     private final static double defaultSize = 10;
-    private final static double defaultSizeM = 1;
+    private final static double defaultSizeM = 2;
 
     private static HashSet<double[]> mouseClicks = new HashSet<>();
     private static ArrayList<Node> Nodes = new ArrayList<>();
@@ -62,16 +59,35 @@ public class Application {
 
         mainStage.setOnCloseRequest(event -> Application.close());
 
-        canvas.setOnMouseClicked(event ->
-                mouseClicks.add(new double[] {event.getX(), event.getY(), 0}));
+        //Here we capture any mouse clicks, and store them as a double array in a hash set
+        //the array has the structure: [x,y,z,click-type]
+        canvas.setOnMousePressed(event -> {
+                if (event.isPrimaryButtonDown()) {
+                    mouseClicks.add(new double[] {event.getX(), event.getY(), 0});
+                } else if (event.isSecondaryButtonDown()) {
+                    mouseClicks.add(new double[] {event.getX(), event.getY(), 1});
+                }
+        });
+
+
 
         root.getChildren().add(canvas);
         GC.setFill(Color.BLACK);
         GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
 
         //These root and end nodes will be used for our dijkstra algorithm
-        Node rootNode = new Node(defaultPos,defaultSize,defaultSizeM,RandomSpeed(),Color.LIMEGREEN);
-        Node endNode = new Node(new double[] {200,600,400},defaultSize,defaultSizeM,RandomSpeed(),Color.RED);
+        Node rootNode = new Node(defaultPos,
+                defaultSize,
+                defaultSizeM,
+                RandomSpeed(),
+                Color.LIMEGREEN);
+
+        Node endNode = new Node(new double[] {200,600,400},
+                defaultSize,
+                defaultSizeM,
+                RandomSpeed(),
+                Color.RED);
+
         Nodes.add(rootNode);
         Nodes.add(endNode);
 
@@ -80,7 +96,6 @@ public class Application {
         //as the animation is unreliable for a stable frame rate
         new Timer().schedule(
                 new TimerTask() {
-
                     @Override
                     public void run() {
                         if ( Nodes!=null && !Nodes.isEmpty()){
@@ -101,30 +116,36 @@ public class Application {
 
                 //CREATING NEW NODES IF MOUSE IS CLICKED
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
-
-                    for (double[] pos : mouseClicks) {
-                        Nodes.add(new Node(pos, defaultSize, defaultSizeM,
+                    for (double[] click : mouseClicks) {
+                        if (click[2] == 0) {
+                            Nodes.add(new Node(click, defaultSize, defaultSizeM,
                                 new double[] {
                                         randomGen.nextDouble()*6-3,
                                         randomGen.nextDouble()*6-3,
                                         randomGen.nextDouble()*6-3}, Color.WHITE));
+                        } else if (click[2] == 1) {
+                            Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0],n.position[1]-click[1]) < n.size*n.sizeModifier));
+                        }
                     }
                     mouseClicks.clear();
                 }
 
                 //DRAWING ALL THE NODES
+                GC.setFill(Color.BLACK);
+                GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
                 if (Nodes!=null && !Nodes.isEmpty()) {
-                    GC.setFill(Color.BLACK);
-                    GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
+
                     for (Node n : Nodes) {
 
                         GC.setFill(n.nodeColor);
-                        GC.fillOval(n.position[0], n.position[1], n.size*n.sizeModifier, n.size*n.sizeModifier);
+                        GC.fillOval(n.position[0],n.position[1],
+                                n.size*n.sizeModifier, n.size*n.sizeModifier);
                     }
                 }
             }
         }.start();
     }
+
 
     private static double[] RandomSpeed() {
 
