@@ -16,11 +16,14 @@ public class Application {
     private final static double WIN_WIDTH = 1200;
 
     private final static double[] defaultPos = {400,600,200};
-    private final static double defaultSize = 10;
+    private final static double defaultSize = 20;
     private final static double defaultSizeM = 2;
 
     private static HashSet<double[]> mouseClicks = new HashSet<>();
     private static ArrayList<Node> Nodes = new ArrayList<>();
+
+    private static boolean threeDTurnedOn = true;
+    private static boolean movementTurnedOn = true;
 
     private static Random randomGen = new Random();
 
@@ -34,7 +37,6 @@ public class Application {
         System.out.println("Application starting...");
         System.out.println("Initializing Screen Controller");
 
-        //ScreenController controller = new ScreenController();
 
         Group root = new Group();
         Stage mainStage =  new Stage();
@@ -59,8 +61,27 @@ public class Application {
 
         mainStage.setOnCloseRequest(event -> Application.close());
 
+
+
+        mainScene.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case ESCAPE:
+                    Application.close();
+                    break;
+                case SPACE:
+                    threeDTurnedOn = !threeDTurnedOn;
+                    System.out.println("3D off");
+                    break;
+                case B:
+                    movementTurnedOn = !movementTurnedOn;
+                    System.out.println("Movement off");
+                    break;
+            }
+
+        });
+
         //Here we capture any mouse clicks, and store them as a double array in a hash set
-        //the array has the structure: [x,y,z,click-type]
+        //the array has the structure: [x,y,click-type]
         canvas.setOnMousePressed(event -> {
                 if (event.isPrimaryButtonDown()) {
                     mouseClicks.add(new double[] {event.getX(), event.getY(), 0});
@@ -100,7 +121,12 @@ public class Application {
                     public void run() {
                         if ( Nodes!=null && !Nodes.isEmpty()){
                             for (Node n : Nodes) {
-                                n.UpdatePosition(boundaries);
+                                if (movementTurnedOn) n.UpdatePosition(boundaries,(1+ (threeDTurnedOn ? 1:0) ));
+                                if (threeDTurnedOn) {
+                                    n.UpdateSize(boundaries, threeDTurnedOn);
+                                } else {
+                                    n.sizeModifier =1;
+                                }
                             }
                         }
                     }
@@ -118,11 +144,11 @@ public class Application {
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
                     for (double[] click : mouseClicks) {
                         if (click[2] == 0) {
-                            Nodes.add(new Node(click, defaultSize, defaultSizeM,
-                                new double[] {
-                                        randomGen.nextDouble()*6-3,
-                                        randomGen.nextDouble()*6-3,
-                                        randomGen.nextDouble()*6-3}, Color.WHITE));
+                            Nodes.add(new Node(click,
+                                    defaultSize,
+                                    defaultSizeM,
+                                    RandomSpeed(),
+                                    Color.WHITE));
                         } else if (click[2] == 1) {
                             Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0],n.position[1]-click[1]) < n.size*n.sizeModifier));
                         }
@@ -152,7 +178,7 @@ public class Application {
         return new double [] {
                 randomGen.nextDouble()*6-3,
                 randomGen.nextDouble()*6-3,
-                randomGen.nextDouble()*6-3
+                randomGen.nextDouble()*3-1.5
         };
     }
 
