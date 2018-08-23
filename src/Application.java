@@ -6,15 +6,15 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
-import java.util.Random;
-import java.util.ArrayList;
-import java.util.HashSet;
+
+import java.util.*;
+
 import javafx.animation.*;
 
 
 public class Application {
 
-//
+
     private final static double WIN_HEIGHT = 800;
     private final static double WIN_WIDTH = 1200;
 
@@ -70,10 +70,27 @@ public class Application {
         GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
 
         //These root and end nodes will be used for our dijkstra algorithm
-        Node rootNode = new Node(defaultPos,defaultSize,defaultSizeM,RandomSpeed(),Color.GREEN);
+        Node rootNode = new Node(defaultPos,defaultSize,defaultSizeM,RandomSpeed(),Color.LIMEGREEN);
         Node endNode = new Node(new double[] {200,600,400},defaultSize,defaultSizeM,RandomSpeed(),Color.RED);
         Nodes.add(rootNode);
         Nodes.add(endNode);
+
+
+        //This timer makes sure that the speed of the nodes is NOT affected by frame rate
+        //as the animation is unreliable for a stable frame rate
+        new Timer().schedule(
+                new TimerTask() {
+
+                    @Override
+                    public void run() {
+                        if ( Nodes!=null && !Nodes.isEmpty()){
+                            for (Node n : Nodes) {
+                                n.UpdatePosition(boundaries);
+                            }
+                        }
+                    }
+                },0,1000/60
+        );
 
 
         new AnimationTimer() {
@@ -81,13 +98,6 @@ public class Application {
             public void handle(long now) {
                 GC.setStroke(Color.WHITE);
                 GC.setFill(Color.WHITE);
-
-                //UPDATING NODES POSITIONS
-                if ( Nodes!=null && !Nodes.isEmpty()){
-                    for (Node n : Nodes) {
-                        n.UpdatePosition(boundaries);
-                    }
-                }
 
                 //CREATING NEW NODES IF MOUSE IS CLICKED
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
