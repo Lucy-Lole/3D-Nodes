@@ -26,19 +26,19 @@ public class Application {
 
     private static boolean threeDTurnedOn = true;
     private static boolean movementTurnedOn = true;
+    private static boolean dijkstraTurnedOn = true;
+    private final static int framesPerSecond = 60;
 
     private static Random randomGen = new Random();
 
     public static void main(String args[]) {
-        JFXPanel panel = new JFXPanel();
+        new JFXPanel();
         Platform.runLater(Application::start);
     }
 
 
     private static void start() {
         System.out.println("Application starting...");
-        System.out.println("Initializing Screen Controller");
-
 
         Group root = new Group();
         Stage mainStage =  new Stage();
@@ -54,6 +54,7 @@ public class Application {
         canvas.setHeight(mainStage.getHeight());
         GraphicsContext GC = canvas.getGraphicsContext2D();
 
+        root.getChildren().add(canvas);
 
         //There seems to be some weirdness where the canvas and stage can't agree on the same
         //size, so i've manually found the size difference and fixed it
@@ -77,6 +78,12 @@ public class Application {
                 case B:
                     movementTurnedOn = !movementTurnedOn;
                     System.out.println("Movement off");
+                    break;
+                case C:
+                    Nodes.removeIf((Node n) -> (n.nodeColor == Color.WHITE));
+                    break;
+                case V:
+                    dijkstraTurnedOn = !dijkstraTurnedOn;
                     break;
             }
 
@@ -102,7 +109,7 @@ public class Application {
 
         });
 
-        root.getChildren().add(canvas);
+
         GC.setFill(Color.BLACK);
         GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
 
@@ -145,7 +152,7 @@ public class Application {
                             }
                         }
                     }
-                },0,1000/60
+                },0,1000/framesPerSecond
         );
 
 
@@ -167,7 +174,7 @@ public class Application {
                             Nodes.add(newNode);
                             newNode.UpdateSize(boundaries);
                         } else if (click[2] == 1) {
-                            Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0],n.position[1]-click[1]) < n.size*n.sizeModifier));
+                            Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0],n.position[1]-click[1]) < n.size*n.sizeModifier) && n.nodeColor == Color.WHITE);
                         }
                     }
                     mouseClicks.clear();
