@@ -6,8 +6,14 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.*;
+
+//import java.awt.*;
 import java.util.*;
 import javafx.animation.*;
 
@@ -23,6 +29,7 @@ public class Application {
 
     private static HashSet<double[]> mouseClicks = new HashSet<>();
     private static ArrayList<Node> Nodes = new ArrayList<>();
+    private static ArrayList<Text> textToDisplay = new ArrayList<>();
 
     private static boolean threeDTurnedOn = true;
     private static boolean movementTurnedOn = true;
@@ -45,7 +52,12 @@ public class Application {
         Scene mainScene = new Scene(root);
         Canvas canvas = new Canvas();
 
-        mainStage.setResizable(true);
+        mainStage.setResizable(false);
+        try {
+            mainStage.getIcons().add(new Image(Application.class.getResource("favicon.png").toExternalForm()));
+        } catch (Exception e) {
+            System.out.println("Failed to load icon: " + e.getMessage());
+        }
         mainStage.setHeight(WIN_HEIGHT);
         mainStage.setWidth(WIN_WIDTH);
         mainStage.setTitle("3D Nodes");
@@ -54,7 +66,24 @@ public class Application {
         canvas.setHeight(mainStage.getHeight());
         GraphicsContext GC = canvas.getGraphicsContext2D();
 
+        TextFlow textFlow = new TextFlow();
+        textFlow.setLayoutX(9);
+        textFlow.setLayoutY(700);
+
+        Text threeDText = new Text("3-D Mode (Space)");
+        Text moveText = new Text("\nNode Movement (B)");
+        Text dijkstraText = new Text("\nDijkstra's Visible (V)");
+        Text clearText = new Text("\nPress (C) to clear nodes");
+        clearText.setFill(Color.WHITE);
+        Collections.addAll(textToDisplay,threeDText,moveText,dijkstraText,clearText);
+        textToDisplay.forEach((Text t) -> t.setFont(Font.font("Consolas",12)));
+
+
+        textFlow.getChildren().addAll(textToDisplay);
+        
+
         root.getChildren().add(canvas);
+        root.getChildren().add(textFlow);
 
         //There seems to be some weirdness where the canvas and stage can't agree on the same
         //size, so i've manually found the size difference and fixed it
@@ -63,7 +92,6 @@ public class Application {
         mainStage.show();
 
         mainStage.setOnCloseRequest(event -> Application.close());
-
 
 
         mainScene.setOnKeyPressed(event -> {
@@ -113,6 +141,7 @@ public class Application {
         GC.setFill(Color.BLACK);
         GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
 
+
         //These root and end nodes will be used for our dijkstra algorithm
         Node rootNode = new Node(defaultPos,
                 defaultSize,
@@ -125,7 +154,6 @@ public class Application {
                 defaultSizeM,
                 RandomSpeed(),
                 Color.RED);
-
         Nodes.add(rootNode);
         Nodes.add(endNode);
 
@@ -174,7 +202,7 @@ public class Application {
                             Nodes.add(newNode);
                             newNode.UpdateSize(boundaries);
                         } else if (click[2] == 1) {
-                            Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0],n.position[1]-click[1]) < n.size*n.sizeModifier) && n.nodeColor == Color.WHITE);
+                            Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0], n.position[1]-click[1]) < n.size*n.sizeModifier) && n.nodeColor == Color.WHITE);
                         }
                     }
                     mouseClicks.clear();
@@ -190,6 +218,14 @@ public class Application {
                                 n.size*n.sizeModifier, n.size*n.sizeModifier);
                     }
                 }
+
+                //DRAWING THE LABELS
+                threeDText.setFill(threeDTurnedOn ? Color.LIMEGREEN : Color.RED);
+                dijkstraText.setFill(dijkstraTurnedOn ? Color.LIMEGREEN : Color.RED);
+                moveText.setFill(movementTurnedOn ? Color.LIMEGREEN : Color.RED);
+                
+
+
             }
         }.start();
     }
@@ -207,5 +243,6 @@ public class Application {
     private static void close() {
         System.out.println("Application closing");
         System.exit(0);
+
     }
 }
