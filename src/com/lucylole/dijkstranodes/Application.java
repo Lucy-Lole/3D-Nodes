@@ -1,3 +1,5 @@
+package com.lucylole.dijkstranodes;
+
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Group;
@@ -90,7 +92,15 @@ public class Application {
                 }
         });
 
+        canvas.setOnMouseDragged(event -> {
+            if (event.isSecondaryButtonDown()) {
+                mouseClicks.add(new double[]{event.getX(), event.getY(), 1});
+            } else if (event.isPrimaryButtonDown()) {
+                mouseClicks.add(new double[] {event.getX(), event.getY(), 0});
+            }
 
+
+        });
 
         root.getChildren().add(canvas);
         GC.setFill(Color.BLACK);
@@ -120,13 +130,18 @@ public class Application {
                     @Override
                     public void run() {
                         if ( Nodes!=null && !Nodes.isEmpty()){
-                            for (Node n : Nodes) {
-                                if (movementTurnedOn) n.UpdatePosition(boundaries,(1+ (threeDTurnedOn ? 1:0) ));
-                                if (threeDTurnedOn) {
-                                    n.UpdateSize(boundaries, threeDTurnedOn);
-                                } else {
-                                    n.sizeModifier =1;
+                            try {
+                                for (Node n : Nodes) {
+                                    if (movementTurnedOn)
+                                        n.UpdatePosition(boundaries, (1 + (threeDTurnedOn ? 1 : 0)));
+                                    if (threeDTurnedOn) {
+                                        n.UpdateSize(boundaries);
+                                    } else {
+                                        n.sizeModifier = 1;
+                                    }
                                 }
+                            } catch (Exception e) {
+                                System.out.println(e.getMessage());
                             }
                         }
                     }
@@ -144,11 +159,13 @@ public class Application {
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
                     for (double[] click : mouseClicks) {
                         if (click[2] == 0) {
-                            Nodes.add(new Node(click,
+                            Node newNode = new Node(click,
                                     defaultSize,
                                     defaultSizeM,
                                     RandomSpeed(),
-                                    Color.WHITE));
+                                    Color.WHITE);
+                            Nodes.add(newNode);
+                            newNode.UpdateSize(boundaries);
                         } else if (click[2] == 1) {
                             Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0],n.position[1]-click[1]) < n.size*n.sizeModifier));
                         }
@@ -160,9 +177,7 @@ public class Application {
                 GC.setFill(Color.BLACK);
                 GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
                 if (Nodes!=null && !Nodes.isEmpty()) {
-
                     for (Node n : Nodes) {
-
                         GC.setFill(n.nodeColor);
                         GC.fillOval(n.position[0],n.position[1],
                                 n.size*n.sizeModifier, n.size*n.sizeModifier);

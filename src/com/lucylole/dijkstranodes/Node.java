@@ -1,3 +1,5 @@
+package com.lucylole.dijkstranodes;
+
 import javafx.scene.paint.Color;
 import java.util.Arrays;
 
@@ -7,7 +9,6 @@ public class Node {
     // [x,y,z]
 
     public double size,sizeModifier;
-    private double diam = 2*size*sizeModifier;
     public double[] centre = {0,0,0};
     private double[] speed;
     // [xSpeed,ySpeed,zSpeed]
@@ -24,28 +25,26 @@ public class Node {
         this.speed = Arrays.copyOf(speed,3);
     }
 
-    public void UpdatePosition(double[] boundaries,int coordAmmount) {
-        for (int i=0;i<=coordAmmount;i++) {
+    public void UpdatePosition(double[] boundaries,int coordAmount) {
+        for (int i=0;i<=coordAmount;i++) {
             //update the position first
             position[i] += speed[i];
+            centre[i] = (position[i]+size*sizeModifier);
+            double diam = (size*sizeModifier);
             //now we check to see if our new position is out of bounds
-            if (position[i] > boundaries[i]) {
-                //if were out the far boundary we get it back inside and invert the movement
-                position[i] = boundaries[i]-diam;
-                speed[i] = -speed[i];
-            } else if ((position[i] + diam) > boundaries[i]) {
+            if ((position[i] + diam) > boundaries[i]) {
                 position[i] = boundaries[i]-diam;
                 speed[i] = -speed[i];
             } else if (position[i] < 0) {
                 position[i] = 0;
                 speed[i] = -speed[i];
             }
-            centre[i] = (position[i]+size);
+
         }
     }
 
-    public void UpdateSize(double[] boundaries,boolean threeDTurnedOn) {
-        int maxSizeModifier = 5;
+    public void UpdateSize(double[] boundaries) {
+        double maxSizeModifier = 2.5;
         sizeModifier = (0.4+maxSizeModifier*(position[2]/boundaries[2]));
     }
 }

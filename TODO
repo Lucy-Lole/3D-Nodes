@@ -1,8 +1,8 @@
 TODO:
 
---Bigger nodes are still bouncing based on their tiny size
-
 --Dijkstra's on the nodes
+
+--labels to show if movement/3d on
 
 -frame rate display
 
@@ -10,13 +10,3 @@ TODO:
 
 
 Code graveyard:
-
-        /*
-        canvas.addEventFilter(MouseEvent.MOUSE_PRESSED, (event) ->
-                    mouseClicks.add(new double[] {event.getX(), event.getY()})
-        );
-        */
-
-
-
-System.out.println(pos[0] + " " + pos[1]);
