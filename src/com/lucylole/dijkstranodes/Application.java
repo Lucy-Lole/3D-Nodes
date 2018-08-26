@@ -128,7 +128,7 @@ public class Application {
                     System.out.println("Movement off");
                     break;
                 case C:
-                    Nodes.removeIf((Node n) -> (n.nodeColor == Color.WHITE));
+                    Nodes.removeIf((Node n) -> (n.nodeColor == Color.WHITE || n.nodeColor == Color.YELLOW));
                     break;
                 case V:
                     dijkstraTurnedOn = !dijkstraTurnedOn;
@@ -165,9 +165,8 @@ public class Application {
             } else if (event.isPrimaryButtonDown()) {
                 mouseClicks.add(new double[] {event.getX(), event.getY(), 0});
             }
-
-
         });
+
 
         //These root and end nodes will be used for our dijkstra algorithm
         Node rootNode = new Node(defaultPos,
@@ -240,7 +239,7 @@ public class Application {
                             Nodes.removeIf((Node n) ->
                                     (Math.hypot(n.centre[0]-click[0],
                                             n.position[1]-click[1]) < n.size*n.sizeModifier)
-                                            && n.nodeColor == Color.WHITE);
+                                            && (n.nodeColor == Color.WHITE || n.nodeColor == Color.YELLOW));
                         }
                     }
                     mouseClicks.clear();
@@ -310,12 +309,14 @@ public class Application {
                     n = null;
                     Nodes.sort(Comparator.comparingDouble(Node::GetWeight));
                     double lowestWeight = Double.MAX_VALUE;
+
                     for (Node nextNode : Nodes) {
                         if (!nextNode.checked && nextNode.weight < lowestWeight) {
                             n = nextNode;
                             lowestWeight = nextNode.weight;
                         }
                     }
+
                 } while (n != null);
 
                 //DRAWING THE EDGES
@@ -362,6 +363,14 @@ public class Application {
                                 drawNode.position[1],
                                 drawNode.size*drawNode.sizeModifier,
                                 drawNode.size*drawNode.sizeModifier);
+                        if (dijkstraTurnedOn) {
+
+                            GC.fillText(
+                                    drawNode.weight == Double.MAX_VALUE ?
+                                            "∞" : String.format("%.1f", drawNode.weight),
+                                    drawNode.centre[0] - 10,
+                                    drawNode.centre[1] + 2 + n.size * drawNode.sizeModifier);
+                        }
                     }
                 }
 
