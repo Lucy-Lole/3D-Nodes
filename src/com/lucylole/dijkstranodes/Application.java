@@ -12,13 +12,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.*;
-
-//import java.awt.*;
 import java.util.*;
 import javafx.animation.*;
 
 public class Application {
-
     //Window vars
     private final static double WIN_HEIGHT = 800;
     private final static double WIN_WIDTH = 1200;
@@ -49,7 +46,6 @@ public class Application {
         Platform.runLater(Application::start);
     }
 
-
     private static void start() {
         System.out.println("Application starting...");
 
@@ -60,7 +56,8 @@ public class Application {
 
         mainStage.setResizable(false);
         try {
-            mainStage.getIcons().add(new Image(Application.class.getResource("favicon.png").toExternalForm()));
+            mainStage.getIcons().add(new Image(
+                    Application.class.getResource("favicon.png").toExternalForm()));
         } catch (Exception e) {
             System.out.println("Failed to load icon: " + e.getMessage());
         }
@@ -74,15 +71,27 @@ public class Application {
 
         TextFlow textFlow = new TextFlow();
         textFlow.setLayoutX(9);
-        textFlow.setLayoutY(690);
+        textFlow.setLayoutY(672);
 
         Text threeDText = new Text("3-D Mode (Space)");
         Text moveText = new Text("\nNode Movement (B)");
         Text dijkstraText = new Text("\nDijkstra's Visible (V)");
         Text clearText = new Text("\nPress (C) to clear nodes");
-        Text tetherText = new Text("\nPress (UP) or (DOWN) to change tether distance. Tether Distance: "+ tetherDistance);
-        clearText.setFill(Color.WHITE);
-        Collections.addAll(textToDisplay,threeDText,moveText,dijkstraText,clearText,tetherText);
+        Text tetherText = new Text();
+        Text nodeCount = new Text();
+
+        clearText.setFill(Color.YELLOW);
+        tetherText.setFill(Color.YELLOW);
+        nodeCount.setFill(Color.YELLOW);
+
+        Collections.addAll(textToDisplay,
+                threeDText,
+                moveText,
+                dijkstraText,
+                clearText,
+                nodeCount,
+                tetherText);
+
         textToDisplay.forEach((Text t) -> t.setFont(Font.font("Consolas",12)));
 
 
@@ -150,11 +159,6 @@ public class Application {
 
         });
 
-
-        GC.setFill(Color.BLACK);
-        GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
-
-
         //These root and end nodes will be used for our dijkstra algorithm
         Node rootNode = new Node(defaultPos,
                 defaultSize,
@@ -175,7 +179,7 @@ public class Application {
 
 
         //This timer makes sure that the speed of the nodes is NOT affected by frame rate
-        //as the animation is unreliable for a stable frame rate
+        //frame rate is unreliable for stable movement
         new Timer().schedule(
                 new TimerTask() {
                     @Override
@@ -184,10 +188,12 @@ public class Application {
                             try {
                                 for (Node n : Nodes) {
                                     if (movementTurnedOn)
-                                        n.UpdatePosition(boundaries, (1 + (threeDTurnedOn ? 1 : 0)));
+                                        n.UpdatePosition(boundaries,
+                                                (1 + (threeDTurnedOn ? 1 : 0)));
                                     if (threeDTurnedOn) {
                                         n.UpdateSize(boundaries);
                                     } else {
+                                        n.UpdateCentre();
                                         n.sizeModifier = 1;
                                     }
                                 }
@@ -223,7 +229,8 @@ public class Application {
                             newNode.UpdateSize(boundaries);
                         } else if (click[2] == 1) {
                             Nodes.removeIf((Node n) ->
-                                    (Math.hypot(n.centre[0]-click[0], n.position[1]-click[1]) < n.size*n.sizeModifier)
+                                    (Math.hypot(n.centre[0]-click[0],
+                                            n.position[1]-click[1]) < n.size*n.sizeModifier)
                                             && n.nodeColor == Color.WHITE);
                         }
                     }
@@ -237,13 +244,15 @@ public class Application {
                 Nodes.forEach((Node n ) -> {
                     n.edgesChecked = false;
                     n.edges.clear();
+                    n.nodeColor = Color.WHITE;
+
                 });
 
                 //FINDING ALL THE EDGES
                 for (Node n : Nodes) {
                     for (Node potentialNode : Nodes) {
                         if (!potentialNode.edgesChecked) {
-                            double distanceBetween = Node.distance(n,potentialNode);
+                            double distanceBetween = Node.distance(n,potentialNode,threeDTurnedOn);
                             if (distanceBetween <= tetherDistance) {
                                 //This adds it to our drawing list
                                 edgesToDraw.add(new Edge(n,
@@ -297,18 +306,9 @@ public class Application {
                     }
                 } while (n != null);
 
-                //DRAWING ALL THE NODES
+                //DRAWING THE EDGES
                 GC.setFill(Color.BLACK);
                 GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
-                if (Nodes!=null && !Nodes.isEmpty()) {
-                    for (Node drawNode : Nodes) {
-                        GC.setFill(drawNode.nodeColor);
-                        GC.fillOval(drawNode.position[0],drawNode.position[1],
-                                drawNode.size*drawNode.sizeModifier, drawNode.size*drawNode.sizeModifier);
-                    }
-                }
-
-                //DRAWING THE EDGES
                 if (edgesToDraw!=null && !edgesToDraw.isEmpty()) {
                     GC.setLineWidth(1);
                     for (Edge e : edgesToDraw) {
@@ -319,19 +319,41 @@ public class Application {
 
                 //DRAWING THE PATH
                 n = endNode;
-
                 GC.setStroke(Color.YELLOW);
                 GC.setLineWidth(4);
-                while (n.prevNode != null) {
+                while (n.prevNode != null && dijkstraTurnedOn) {
+                    n.nodeColor = Color.YELLOW;
                     GC.strokeLine(n.centre[0], n.centre[1],n.prevNode.centre[0],n.prevNode.centre[1]);
                     n = n.prevNode;
+                }
+
+                //DRAWING ALL THE NODES
+                Nodes.forEach((Node node) -> {
+                    if (node == endNode) {
+                        node.nodeColor = Color.RED;
+                    } else if (node == rootNode) {
+                        node.nodeColor = Color.LIMEGREEN;
+                    }
+                });
+
+                if (Nodes!=null && !Nodes.isEmpty()) {
+                    for (Node drawNode : Nodes) {
+                        GC.setFill(drawNode.nodeColor);
+                        GC.fillOval(drawNode.position[0],
+                                drawNode.position[1],
+                                drawNode.size*drawNode.sizeModifier,
+                                drawNode.size*drawNode.sizeModifier);
+                    }
                 }
 
                 //DRAWING THE LABELS
                 threeDText.setFill(threeDTurnedOn ? Color.LIMEGREEN : Color.RED);
                 dijkstraText.setFill(dijkstraTurnedOn ? Color.LIMEGREEN : Color.RED);
                 moveText.setFill(movementTurnedOn ? Color.LIMEGREEN : Color.RED);
-                tetherText.setFill(Color.WHITE);
+                nodeCount.setText("\nNode count: " + Nodes.size());
+                tetherText.setText(
+                        "\nPress (UP) or (DOWN) to change tether distance. Tether Distance: "
+                                + ((int) tetherDistance));
                 
 
 

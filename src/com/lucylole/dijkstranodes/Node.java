@@ -54,11 +54,17 @@ public class Node {
     }
 
 
-    public static double distance(Node n1,Node n2) {
+    public static double distance(Node n1,Node n2, boolean threeDTurnedOn) {
         return Math.sqrt(
                 Math.pow(n1.position[0]-n2.position[0],2)
                 + Math.pow(n1.position[1]-n2.position[1],2)
-                + Math.pow(n1.position[2]-n2.position[2],2));
+                + (threeDTurnedOn ? Math.pow(n1.position[2]-n2.position[2],2) : 0));
+    }
+
+    public void UpdateCentre() {
+        for (int i=0;i<=2;i++) {
+            centre[i] = (position[i] + (size / 2) * sizeModifier);
+        }
     }
 
     public double GetWeight() {
