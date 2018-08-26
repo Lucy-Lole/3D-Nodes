@@ -3,7 +3,6 @@ package com.lucylole.dijkstranodes;
 import javafx.scene.paint.Color;
 
 public class Edge {
-
     public Node origin;
     public Node end;
     public double distance;
@@ -19,7 +18,4 @@ public class Edge {
     public double GetDistance() {
         return distance;
     }
-
-
-
 }

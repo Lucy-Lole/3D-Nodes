@@ -5,23 +5,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Node {
-
     public double[] position;
     // [x,y,z]
-
+    private double[] speed;
+    // [xSpeed,ySpeed,zSpeed]
     public double size,sizeModifier;
     public double[] centre;
-    private double[] speed;
     public ArrayList<Edge> edges;
     public boolean edgesChecked = false;
     public boolean checked = false;
     public double weight;
     public Node prevNode = null;
-    // [xSpeed,ySpeed,zSpeed]
-
-
     public Color nodeColor;
-
 
     Node(double[] position, double size, double sizeModifier, double[] speed, Color nodeColor, double weight) {
 
@@ -35,10 +30,10 @@ public class Node {
         this.centre = Arrays.copyOf(position,3);
     }
 
-    public void UpdatePosition(double[] boundaries,int coordAmount) {
+    public void UpdatePosition(double[] boundaries,int coordAmount,double speedModifier) {
         for (int i=0;i<=coordAmount;i++) {
             //update the position first
-            position[i] += speed[i];
+            position[i] += speedModifier*speed[i];
             centre[i] = (position[i]+(size/2)*sizeModifier);
             double diam = (size*sizeModifier);
             //now we check to see if our new position is out of bounds
@@ -49,10 +44,8 @@ public class Node {
                 position[i] = 0;
                 speed[i] = -speed[i];
             }
-
         }
     }
-
 
     public static double distance(Node n1,Node n2, boolean threeDTurnedOn) {
         return Math.sqrt(
@@ -70,7 +63,6 @@ public class Node {
     public double GetWeight() {
         return weight;
     }
-
 
     public void UpdateSize(double[] boundaries) {
         double maxSizeModifier = 2.5;

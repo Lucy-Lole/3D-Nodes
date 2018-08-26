@@ -26,6 +26,7 @@ public class Application {
     private final static double[] defaultPos = {400,600,200};
     private final static double defaultSize = 20;
     private final static double defaultSizeM = 2;
+    private static double speedModifier = 1;
     private static ArrayList<Node> Nodes = new ArrayList<>();
 
     //Text vars
@@ -71,7 +72,7 @@ public class Application {
 
         TextFlow textFlow = new TextFlow();
         textFlow.setLayoutX(9);
-        textFlow.setLayoutY(672);
+        textFlow.setLayoutY(657);
 
         Text threeDText = new Text("3-D Mode (Space)");
         Text moveText = new Text("\nNode Movement (B)");
@@ -79,37 +80,34 @@ public class Application {
         Text clearText = new Text("\nPress (C) to clear nodes");
         Text tetherText = new Text();
         Text nodeCount = new Text();
+        Text speedText = new Text();
 
         clearText.setFill(Color.YELLOW);
         tetherText.setFill(Color.YELLOW);
         nodeCount.setFill(Color.YELLOW);
+        speedText.setFill(Color.YELLOW);
 
         Collections.addAll(textToDisplay,
                 threeDText,
                 moveText,
                 dijkstraText,
-                clearText,
                 nodeCount,
-                tetherText);
+                clearText,
+                tetherText,
+                speedText);
 
         textToDisplay.forEach((Text t) -> t.setFont(Font.font("Consolas",12)));
-
-
         textFlow.getChildren().addAll(textToDisplay);
-        
-
-        root.getChildren().add(canvas);
-        root.getChildren().add(textFlow);
 
         //There seems to be some weirdness where the canvas and stage can't agree on the same
         //size, so i've manually found the size difference and fixed it
         double [] boundaries = {canvas.getWidth()-17,canvas.getHeight()-40,400};
 
+        root.getChildren().add(canvas);
+        root.getChildren().add(textFlow);
         mainStage.show();
 
         mainStage.setOnCloseRequest(event -> Application.close());
-
-
         mainScene.setOnKeyPressed(event -> {
             switch (event.getCode()) {
                 case ESCAPE:
@@ -134,6 +132,12 @@ public class Application {
                     break;
                 case DOWN:
                     tetherDistance -= 10;
+                    break;
+                case LEFT:
+                    speedModifier -= 0.1;
+                    break;
+                case RIGHT:
+                    speedModifier += 0.1;
                     break;
             }
 
@@ -166,17 +170,14 @@ public class Application {
                 RandomSpeed(),
                 Color.LIMEGREEN,
                 0);
-
         Node endNode = new Node(new double[] {200,600,400},
                 defaultSize,
                 defaultSizeM,
                 RandomSpeed(),
                 Color.RED,
                 Double.MAX_VALUE);
-
         Nodes.add(rootNode);
         Nodes.add(endNode);
-
 
         //This timer makes sure that the speed of the nodes is NOT affected by frame rate
         //frame rate is unreliable for stable movement
@@ -188,8 +189,10 @@ public class Application {
                             try {
                                 for (Node n : Nodes) {
                                     if (movementTurnedOn)
-                                        n.UpdatePosition(boundaries,
-                                                (1 + (threeDTurnedOn ? 1 : 0)));
+                                        n.UpdatePosition(
+                                                boundaries,
+                                                (1 + (threeDTurnedOn ? 1 : 0)),
+                                                speedModifier);
                                     if (threeDTurnedOn) {
                                         n.UpdateSize(boundaries);
                                     } else {
@@ -204,8 +207,6 @@ public class Application {
                     }
                 },0,1000/framesPerSecond
         );
-
-
 
         //
         //RUNNING EVERY FRAME:
@@ -252,7 +253,10 @@ public class Application {
                 for (Node n : Nodes) {
                     for (Node potentialNode : Nodes) {
                         if (!potentialNode.edgesChecked) {
-                            double distanceBetween = Node.distance(n,potentialNode,threeDTurnedOn);
+                            double distanceBetween = Node.distance(
+                                    n,
+                                    potentialNode,
+                                    threeDTurnedOn);
                             if (distanceBetween <= tetherDistance) {
                                 //This adds it to our drawing list
                                 edgesToDraw.add(new Edge(n,
@@ -313,7 +317,11 @@ public class Application {
                     GC.setLineWidth(1);
                     for (Edge e : edgesToDraw) {
                         GC.setStroke(e.color);
-                        GC.strokeLine(e.origin.centre[0],e.origin.centre[1],e.end.centre[0],e.end.centre[1]);
+                        GC.strokeLine(
+                                e.origin.centre[0],
+                                e.origin.centre[1],
+                                e.end.centre[0],
+                                e.end.centre[1]);
                     }
                 }
 
@@ -323,7 +331,11 @@ public class Application {
                 GC.setLineWidth(4);
                 while (n.prevNode != null && dijkstraTurnedOn) {
                     n.nodeColor = Color.YELLOW;
-                    GC.strokeLine(n.centre[0], n.centre[1],n.prevNode.centre[0],n.prevNode.centre[1]);
+                    GC.strokeLine(
+                            n.centre[0],
+                            n.centre[1],
+                            n.prevNode.centre[0],
+                            n.prevNode.centre[1]);
                     n = n.prevNode;
                 }
 
@@ -335,7 +347,6 @@ public class Application {
                         node.nodeColor = Color.LIMEGREEN;
                     }
                 });
-
                 if (Nodes!=null && !Nodes.isEmpty()) {
                     for (Node drawNode : Nodes) {
                         GC.setFill(drawNode.nodeColor);
@@ -351,22 +362,20 @@ public class Application {
                 dijkstraText.setFill(dijkstraTurnedOn ? Color.LIMEGREEN : Color.RED);
                 moveText.setFill(movementTurnedOn ? Color.LIMEGREEN : Color.RED);
                 nodeCount.setText("\nNode count: " + Nodes.size());
+                speedText.setText(
+                        "\nPress (LEFT) or (RIGHT) to change speed modifier. Current Modifier:  "
+                                + String.format("%.1f", speedModifier));
                 tetherText.setText(
                         "\nPress (UP) or (DOWN) to change tether distance. Tether Distance: "
                                 + ((int) tetherDistance));
-                
-
-
             }
         }.start();
     }
 
-
     private static double[] RandomSpeed() {
-
         return new double [] {
-                randomGen.nextDouble()*6-3,
-                randomGen.nextDouble()*6-3,
+                randomGen.nextDouble()*3-1.5,
+                randomGen.nextDouble()*3-1.5,
                 randomGen.nextDouble()*3-1.5
         };
     }
