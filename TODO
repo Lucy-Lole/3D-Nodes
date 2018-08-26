@@ -1,10 +1,22 @@
 TODO:
 
---Dijkstra's on the nodes
+--slow down the nodes
+
+-tether distance text update
+
+-turn dijkstra's on/off
 
 -frame rate display
 
+-Node count
 
+-When 3D is turned off it needs to then ignore for checking distances
+-when 3d turned off -> set all z axis to the same
 
+-turn off dijkstra's visualisation with button
 
-Code graveyard:
+--NULL CALLS WHEN NODES CANT CONNECT
+
+-recolor nodes in the path
+
+-When switching 2D/3D  while paused edges are misaligned

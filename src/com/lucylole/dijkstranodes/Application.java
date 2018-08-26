@@ -19,23 +19,29 @@ import javafx.animation.*;
 
 public class Application {
 
-
+    //Window vars
     private final static double WIN_HEIGHT = 800;
     private final static double WIN_WIDTH = 1200;
+    private final static int framesPerSecond = 60;
+    private static HashSet<double[]> mouseClicks = new HashSet<>();
 
+    //Node vars
     private final static double[] defaultPos = {400,600,200};
     private final static double defaultSize = 20;
     private final static double defaultSizeM = 2;
-
-    private static HashSet<double[]> mouseClicks = new HashSet<>();
     private static ArrayList<Node> Nodes = new ArrayList<>();
-    private static ArrayList<Text> textToDisplay = new ArrayList<>();
 
+    //Text vars
+    private static ArrayList<Text> textToDisplay = new ArrayList<>();
     private static boolean threeDTurnedOn = true;
     private static boolean movementTurnedOn = true;
     private static boolean dijkstraTurnedOn = true;
-    private final static int framesPerSecond = 60;
 
+    //Dijkstra vars
+    private static double tetherDistance = 200;
+    private static ArrayList<Edge> edgesToDraw = new ArrayList<>();
+
+    //Other vars
     private static Random randomGen = new Random();
 
     public static void main(String args[]) {
@@ -60,7 +66,7 @@ public class Application {
         }
         mainStage.setHeight(WIN_HEIGHT);
         mainStage.setWidth(WIN_WIDTH);
-        mainStage.setTitle("3D Nodes");
+        mainStage.setTitle("Dijkstra Nodes");
         mainStage.setScene(mainScene);
         canvas.setWidth(mainStage.getWidth());
         canvas.setHeight(mainStage.getHeight());
@@ -68,14 +74,15 @@ public class Application {
 
         TextFlow textFlow = new TextFlow();
         textFlow.setLayoutX(9);
-        textFlow.setLayoutY(700);
+        textFlow.setLayoutY(690);
 
         Text threeDText = new Text("3-D Mode (Space)");
         Text moveText = new Text("\nNode Movement (B)");
         Text dijkstraText = new Text("\nDijkstra's Visible (V)");
         Text clearText = new Text("\nPress (C) to clear nodes");
+        Text tetherText = new Text("\nPress (UP) or (DOWN) to change tether distance. Tether Distance: "+ tetherDistance);
         clearText.setFill(Color.WHITE);
-        Collections.addAll(textToDisplay,threeDText,moveText,dijkstraText,clearText);
+        Collections.addAll(textToDisplay,threeDText,moveText,dijkstraText,clearText,tetherText);
         textToDisplay.forEach((Text t) -> t.setFont(Font.font("Consolas",12)));
 
 
@@ -113,6 +120,12 @@ public class Application {
                 case V:
                     dijkstraTurnedOn = !dijkstraTurnedOn;
                     break;
+                case UP:
+                    tetherDistance += 10;
+                    break;
+                case DOWN:
+                    tetherDistance -= 10;
+                    break;
             }
 
         });
@@ -147,13 +160,16 @@ public class Application {
                 defaultSize,
                 defaultSizeM,
                 RandomSpeed(),
-                Color.LIMEGREEN);
+                Color.LIMEGREEN,
+                0);
 
         Node endNode = new Node(new double[] {200,600,400},
                 defaultSize,
                 defaultSizeM,
                 RandomSpeed(),
-                Color.RED);
+                Color.RED,
+                Double.MAX_VALUE);
+
         Nodes.add(rootNode);
         Nodes.add(endNode);
 
@@ -184,11 +200,14 @@ public class Application {
         );
 
 
+
+        //
+        //RUNNING EVERY FRAME:
+        //
+
         new AnimationTimer() {
             @Override
             public void handle(long now) {
-                GC.setStroke(Color.WHITE);
-                GC.setFill(Color.WHITE);
 
                 //CREATING NEW NODES IF MOUSE IS CLICKED
                 if (mouseClicks!=null && !mouseClicks.isEmpty()) {
@@ -198,31 +217,121 @@ public class Application {
                                     defaultSize,
                                     defaultSizeM,
                                     RandomSpeed(),
-                                    Color.WHITE);
+                                    Color.WHITE,
+                                    Double.MAX_VALUE);
                             Nodes.add(newNode);
                             newNode.UpdateSize(boundaries);
                         } else if (click[2] == 1) {
-                            Nodes.removeIf((Node n) -> (Math.hypot(n.centre[0]-click[0], n.position[1]-click[1]) < n.size*n.sizeModifier) && n.nodeColor == Color.WHITE);
+                            Nodes.removeIf((Node n) ->
+                                    (Math.hypot(n.centre[0]-click[0], n.position[1]-click[1]) < n.size*n.sizeModifier)
+                                            && n.nodeColor == Color.WHITE);
                         }
                     }
                     mouseClicks.clear();
                 }
 
+                /*DIJKSTRA'S PROCESSING */
+
+                //CLEARING THE PREVIOUS EDGES
+                edgesToDraw.clear();
+                Nodes.forEach((Node n ) -> {
+                    n.edgesChecked = false;
+                    n.edges.clear();
+                });
+
+                //FINDING ALL THE EDGES
+                for (Node n : Nodes) {
+                    for (Node potentialNode : Nodes) {
+                        if (!potentialNode.edgesChecked) {
+                            double distanceBetween = Node.distance(n,potentialNode);
+                            if (distanceBetween <= tetherDistance) {
+                                //This adds it to our drawing list
+                                edgesToDraw.add(new Edge(n,
+                                        potentialNode,
+                                        distanceBetween,
+                                        Color.WHITE));
+                                //This adds it to the first nodes connections list
+                                n.edges.add(new Edge(n,
+                                        potentialNode,
+                                        distanceBetween,
+                                        Color.WHITE));
+                                //this adds it to the second nodes connections list
+                                potentialNode.edges.add(new Edge(potentialNode,
+                                        n,
+                                        distanceBetween,
+                                        Color.WHITE));
+                            }
+                        }
+                    }
+                    n.edgesChecked = true;
+                }
+
+                //PERFORMING THE PATH FINDING
+                Nodes.forEach((Node n) -> {
+                    n.weight = Double.MAX_VALUE;
+                    n.checked = false;
+                    n.prevNode = null;
+                });
+                rootNode.weight = 0;
+
+                Nodes.sort(Comparator.comparingDouble(Node::GetWeight));
+                Node n = Nodes.get(0);
+                do {
+                    n.edges.sort(Comparator.comparingDouble(Edge::GetDistance));
+                    for (Edge e : n.edges) {
+                        double tempWeight = n.weight + e.distance;
+                        if (tempWeight < e.end.weight) {
+                            e.end.weight = tempWeight;
+                            e.end.prevNode = n;
+                        }
+                    }
+                    n.checked = true;
+                    n = null;
+                    Nodes.sort(Comparator.comparingDouble(Node::GetWeight));
+                    double lowestWeight = Double.MAX_VALUE;
+                    for (Node nextNode : Nodes) {
+                        if (!nextNode.checked && nextNode.weight < lowestWeight) {
+                            n = nextNode;
+                            lowestWeight = nextNode.weight;
+                        }
+                    }
+                } while (n != null);
+
                 //DRAWING ALL THE NODES
                 GC.setFill(Color.BLACK);
                 GC.fillRect(0,0,WIN_WIDTH,WIN_HEIGHT);
                 if (Nodes!=null && !Nodes.isEmpty()) {
-                    for (Node n : Nodes) {
-                        GC.setFill(n.nodeColor);
-                        GC.fillOval(n.position[0],n.position[1],
-                                n.size*n.sizeModifier, n.size*n.sizeModifier);
+                    for (Node drawNode : Nodes) {
+                        GC.setFill(drawNode.nodeColor);
+                        GC.fillOval(drawNode.position[0],drawNode.position[1],
+                                drawNode.size*drawNode.sizeModifier, drawNode.size*drawNode.sizeModifier);
                     }
+                }
+
+                //DRAWING THE EDGES
+                if (edgesToDraw!=null && !edgesToDraw.isEmpty()) {
+                    GC.setLineWidth(1);
+                    for (Edge e : edgesToDraw) {
+                        GC.setStroke(e.color);
+                        GC.strokeLine(e.origin.centre[0],e.origin.centre[1],e.end.centre[0],e.end.centre[1]);
+                    }
+                }
+
+                //DRAWING THE PATH
+                n = endNode;
+
+                GC.setStroke(Color.YELLOW);
+                GC.setLineWidth(4);
+                while (n.prevNode != null) {
+                    GC.strokeLine(n.centre[0], n.centre[1],n.prevNode.centre[0],n.prevNode.centre[1]);
+                    n = n.prevNode;
                 }
 
                 //DRAWING THE LABELS
                 threeDText.setFill(threeDTurnedOn ? Color.LIMEGREEN : Color.RED);
                 dijkstraText.setFill(dijkstraTurnedOn ? Color.LIMEGREEN : Color.RED);
                 moveText.setFill(movementTurnedOn ? Color.LIMEGREEN : Color.RED);
+                tetherText.setFill(Color.WHITE);
                 
 
 

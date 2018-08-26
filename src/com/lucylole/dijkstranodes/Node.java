@@ -1,6 +1,7 @@
 package com.lucylole.dijkstranodes;
 
 import javafx.scene.paint.Color;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Node {
@@ -9,27 +10,36 @@ public class Node {
     // [x,y,z]
 
     public double size,sizeModifier;
-    public double[] centre = {0,0,0};
+    public double[] centre;
     private double[] speed;
+    public ArrayList<Edge> edges;
+    public boolean edgesChecked = false;
+    public boolean checked = false;
+    public double weight;
+    public Node prevNode = null;
     // [xSpeed,ySpeed,zSpeed]
+
 
     public Color nodeColor;
 
 
-    Node(double[] position, double size, double sizeModifier, double[] speed, Color nodeColor) {
+    Node(double[] position, double size, double sizeModifier, double[] speed, Color nodeColor, double weight) {
 
         this.nodeColor = nodeColor;
         this.position = position;
         this.size = size;
         this.sizeModifier = sizeModifier;
         this.speed = Arrays.copyOf(speed,3);
+        edges =  new ArrayList<>();
+        this.weight = weight;
+        this.centre = Arrays.copyOf(position,3);
     }
 
     public void UpdatePosition(double[] boundaries,int coordAmount) {
         for (int i=0;i<=coordAmount;i++) {
             //update the position first
             position[i] += speed[i];
-            centre[i] = (position[i]+size*sizeModifier);
+            centre[i] = (position[i]+(size/2)*sizeModifier);
             double diam = (size*sizeModifier);
             //now we check to see if our new position is out of bounds
             if ((position[i] + diam) > boundaries[i]) {
@@ -42,6 +52,19 @@ public class Node {
 
         }
     }
+
+
+    public static double distance(Node n1,Node n2) {
+        return Math.sqrt(
+                Math.pow(n1.position[0]-n2.position[0],2)
+                + Math.pow(n1.position[1]-n2.position[1],2)
+                + Math.pow(n1.position[2]-n2.position[2],2));
+    }
+
+    public double GetWeight() {
+        return weight;
+    }
+
 
     public void UpdateSize(double[] boundaries) {
         double maxSizeModifier = 2.5;
