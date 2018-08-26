@@ -34,6 +34,8 @@ public class Application {
     private static boolean threeDTurnedOn = true;
     private static boolean movementTurnedOn = true;
     private static boolean dijkstraTurnedOn = true;
+    private static int setFramesElapsed;
+    private static int framesElapsed;
 
     //Dijkstra vars
     private static double tetherDistance = 200;
@@ -72,22 +74,26 @@ public class Application {
 
         TextFlow textFlow = new TextFlow();
         textFlow.setLayoutX(9);
-        textFlow.setLayoutY(657);
+        textFlow.setLayoutY(647);
 
-        Text threeDText = new Text("3-D Mode (Space)");
+        Text threeDText = new Text("\n3-D Mode (Space)");
         Text moveText = new Text("\nNode Movement (B)");
         Text dijkstraText = new Text("\nDijkstra's Visible (V)");
         Text clearText = new Text("\nPress (C) to clear nodes");
         Text tetherText = new Text();
         Text nodeCount = new Text();
         Text speedText = new Text();
+        Text fpsText =  new Text();
 
         clearText.setFill(Color.YELLOW);
         tetherText.setFill(Color.YELLOW);
         nodeCount.setFill(Color.YELLOW);
         speedText.setFill(Color.YELLOW);
+        fpsText.setFill(Color.YELLOW);
+
 
         Collections.addAll(textToDisplay,
+                fpsText,
                 threeDText,
                 moveText,
                 dijkstraText,
@@ -200,10 +206,12 @@ public class Application {
                                         n.sizeModifier = 1;
                                     }
                                 }
+
                             } catch (Exception e) {
                                 System.out.println(e.getMessage());
                             }
                         }
+                        setFramesElapsed += 1;
                     }
                 },0,1000/framesPerSecond
         );
@@ -358,6 +366,14 @@ public class Application {
                 }
 
                 //DRAWING THE LABELS
+                framesElapsed += 1;
+                if (setFramesElapsed >= framesPerSecond) {
+                    fpsText.setText("FPS: " + framesElapsed);
+                    setFramesElapsed = 0;
+                    framesElapsed = 0;
+                }
+
+
                 threeDText.setFill(threeDTurnedOn ? Color.LIMEGREEN : Color.RED);
                 dijkstraText.setFill(dijkstraTurnedOn ? Color.LIMEGREEN : Color.RED);
                 moveText.setFill(movementTurnedOn ? Color.LIMEGREEN : Color.RED);
